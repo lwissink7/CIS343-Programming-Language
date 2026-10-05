@@ -1,0 +1,14 @@
+var x = 10;
+var test123 = 25;
+var _name = "hello";
+
+12.
+.5
+
+// this is a comment
+
+print "hello world";
+
+if (x >= 5) {
+    print x;
+}

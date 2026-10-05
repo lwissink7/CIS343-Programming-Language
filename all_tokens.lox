@@ -1,0 +1,34 @@
+
+( ) { } , . - + ; / *
+! != = == > >= < <=
+
+test
+test123
+_test
+
+"hello"
+"hello world"
+""
+
+0
+5
+123
+12.5
+0.25
+
+and
+class
+else
+false
+fun
+for
+if
+nil
+or
+print
+return
+super
+this
+true
+var
+while
