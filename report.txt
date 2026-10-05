@@ -1,0 +1,264 @@
+The name of my language is Viper. 
+
+Number literals:
+[0-9]+(\.[0-9]+)?
+Examples:
+5
+123
+12.5
+0.25
+String literals:
+"[^"]*"
+Examples:
+"hello"
+"hello world"
+""
+Identifiers:
+[A-Za-z_][A-Za-z0-9_]*
+Examples:
+test
+test123
+_name
+
+Viper uses mostly the same rules as Lox. It supports identifiers, numbers, strings, keywords, operators, punctuation, comments, and an EOF token.
+Comments start with // and continue until the end of the line.
+Whitespace is ignored. Newlines are used to keep track of line numbers for errors.
+Numbers are stored as floating point values, so a number like 5 is printed as 5.0.
+
+The scanner is written in Python and uses the built-in sys module.
+To run a source file:
+python main.py filename.lox
+To run interactive mode:
+python main.py
+Then type Viper code directly into the terminal.
+Tests can be reproduced with:
+python main.py all_tokens.lox
+python main.py edge_cases.lox
+python main.py bad_character.lox
+python main.py bad_string.lox
+Test 1 - All Tokens
+Purpose:
+Tests all supported token types including punctuation, operators, identifiers, numbers, strings, keywords, and EOF.
+Source Input:
+( ) { } , . - + ; / *
+! != = == > >= < <=
+test
+test123
+_test
+"hello"
+"hello world"
+""
+0
+5
+123
+12.5
+0.25
+and
+class
+else
+false
+fun
+for
+if
+nil
+or
+print
+return
+super
+this
+true
+var
+while
+Expected Result:
+Every item should be recognized as the correct token type.
+Test output:
+LEFT_PAREN ( None
+RIGHT_PAREN ) None
+LEFT_BRACE { None
+RIGHT_BRACE } None
+COMMA , None
+DOT . None
+MINUS - None
+PLUS + None
+SEMICOLON ; None
+SLASH / None
+STAR * None
+BANG ! None
+BANG_EQUAL != None
+EQUAL = None
+EQUAL_EQUAL == None
+GREATER > None
+GREATER_EQUAL >= None
+LESS < None
+LESS_EQUAL <= None
+IDENTIFIER test None
+IDENTIFIER test123 None
+IDENTIFIER _test None
+STRING "hello" hello
+STRING "hello world" hello world
+STRING "" 
+NUMBER 0 0.0
+NUMBER 5 5.0
+NUMBER 123 123.0
+NUMBER 12.5 12.5
+NUMBER 0.25 0.25
+AND and None
+CLASS class None
+ELSE else None
+FALSE false None
+FUN fun None
+FOR for None
+IF if None
+NIL nil None
+OR or None
+PRINT print None
+RETURN return None
+SUPER super None
+THIS this None
+TRUE true None
+VAR var None
+WHILE while None
+EOF  None
+Result:
+Pass
+
+Test 2 - Invalid Character
+Purpose:
+Tests the scanner's handling of an unsupported character.
+Source Input:
+var x = 5;
+@
+print x;
+Expected Result:
+The scanner should report an unexpected character error for @ and continue scanning the rest of the file.
+Actual Output:
+[line 2] Error: Unexpected character: @
+VAR var None
+IDENTIFIER x None
+EQUAL = None
+NUMBER 5 5.0
+SEMICOLON ; None
+PRINT print None
+IDENTIFIER x None
+SEMICOLON ; None
+EOF  None
+Result:
+Pass
+
+Test 3 - Edge Cases
+Purpose:
+Tests identifiers, comments, strings, and number edge cases.
+Source Input:
+var x = 10;
+var test123 = 25;
+var _name = "hello";
+12.
+.5
+// this is a comment
+print "hello world";
+if (x >= 5) {
+    print x;
+}
+Expected Result:
+test123 and _name should be identifiers. Comments should be ignored. 12. should be read as NUMBER 12 and DOT. .5 should be read as DOT and NUMBER 5.
+Actual output:
+VAR var None
+IDENTIFIER x None
+EQUAL = None
+NUMBER 10 10.0
+SEMICOLON ; None
+VAR var None
+IDENTIFIER test123 None
+EQUAL = None
+NUMBER 25 25.0
+SEMICOLON ; None
+VAR var None
+IDENTIFIER _name None
+EQUAL = None
+STRING "hello" hello
+SEMICOLON ; None
+NUMBER 12 12.0
+DOT . None
+DOT . None
+NUMBER 5 5.0
+PRINT print None
+STRING "hello world" hello world
+SEMICOLON ; None
+IF if None
+LEFT_PAREN ( None
+IDENTIFIER x None
+GREATER_EQUAL >= None
+NUMBER 5 5.0
+RIGHT_PAREN ) None
+LEFT_BRACE { None
+PRINT print None
+IDENTIFIER x None
+SEMICOLON ; None
+RIGHT_BRACE } None
+EOF  None
+Result:
+Pass
+
+Test 4 - Unterminated String
+Purpose:
+Tests a string that never gets a closing quotation mark.
+Source Input:
+var x = 10;
+print "this string never ends
+Expected Result:
+The scanner should report an unterminated string error.
+Actual Output:
+[line 2] Error: Unterminated string.
+VAR var None
+IDENTIFIER x None
+EQUAL = None
+NUMBER 10 10.0
+SEMICOLON ; None
+PRINT print None
+EOF  None
+Result:
+Pass
+
+Test 5 - Interactive Mode
+Purpose:
+Tests that code can be entered directly into the terminal.
+Source Input:
+var x = 5;
+Expected Result:
+The scanner should print tokens for var x = 5; and stay in interactive mode.
+Actual Output:
+VAR var None
+IDENTIFIER x None
+EQUAL = None
+NUMBER 5 5.0
+SEMICOLON ; None
+EOF  None
+Result:
+Pass
+
+
+Test 6 - Interactive Error Recovery
+Purpose:
+Tests that interactive mode still works after an error.
+Source Input:
+First input:
+@
+Second input:
+print 5;
+Expected Result:
+The scanner should report an unexpected character error for @ and then still scan print 5; normally.
+Actual Output:
+[line 1] Error: Unexpected character: @
+EOF  None
+PRINT print None
+NUMBER 5 5.0
+SEMICOLON ; None
+EOF  None
+Result:
+Pass
+
+Known Limitations:
+Viper currently only has the scanner portion of the interpreter.
+It only supports // comments and does not support block comments.
+Numbers like .5 are not treated as one decimal number. They are scanned as a DOT followed by NUMBER 5.
+Strings do not currently support escape characters.
