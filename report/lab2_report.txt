@@ -1,0 +1,151 @@
+Lab 2 Report
+
+Expression Grammar
+
+expression -> equality ;
+equality -> comparison ( ( "!=" | "==" ) comparison )* ;
+comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term -> factor ( ( "-" | "+" ) factor )* ;
+factor -> unary ( ( "/" | "*" ) unary )* ;
+unary -> ( "!" | "-" ) unary | primary ;
+primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+
+Viper supports number, string, true, false, and nil literals.
+
+Unary operators:
+!
+-
+
+Binary operators:
++
+-
+*
+/
+==
+!=
+>
+>=
+<
+<=
+
+Grouping uses parentheses.
+Viper uses mostly the same expression grammar as Lox. I kept the same basic operators, literals, and operator precedence because they fit the language I started in Lab 1. I did not add any new Viper-specific expression operators for this lab.
+
+
+The AST code is written in Python and does not use any external libraries.
+
+Files used:
+
+ast_nodes.py
+ast_printer.py
+lab2_tests.py
+
+To run the tests:
+
+python lab2_tests.py
+
+
+Test 1
+
+Purpose:
+Tests Binary, Unary, Grouping, and Literal expressions. It also tests nested expressions and the +, -, *, and / operators.
+
+Hard-coded AST:
+
+test1 = Binary(
+    Unary("-", Literal(10)),
+    "+",
+    Grouping(
+        Binary(
+            Literal(5),
+            "*",
+            Binary(Literal(8), "/", Literal(2))
+        )
+    )
+)
+
+Expected output:
+
+(+ (- 10) (group (* 5 (/ 8 2))))
+
+Actual output:
+
+(+ (- 10) (group (* 5 (/ 8 2))))
+
+Result: Pass
+
+
+Test 2 
+
+Purpose:
+Tests boolean literals, the ! unary operator, and the >, <=, ==, and != operators. It also tests nested binary expressions.
+
+Hard-coded AST:
+
+test2 = Binary(
+    Binary(
+        Binary(Literal(10), ">", Literal(5)),
+        "==",
+        Literal(True)
+    ),
+    "!=",
+    Binary(
+        Unary("!", Literal(False)),
+        "==",
+        Binary(Literal(4), "<=", Literal(6))
+    )
+)
+
+Expected output:
+
+(!= (== (> 10 5) true) (== (! false) (<= 4 6)))
+
+Actual output:
+
+(!= (== (> 10 5) true) (== (! false) (<= 4 6)))
+
+Result: Pass
+
+
+Test 3 
+
+Purpose:
+Tests string and nil literals and the -, >=, <, and == operators. It also tests grouping and nested expressions.
+
+Hard-coded AST:
+
+test3 = Binary(
+    Binary(
+        Binary(Literal(10), "-", Literal(3)),
+        ">=",
+        Binary(Literal(2), "<", Literal(5))
+    ),
+    "==",
+    Grouping(
+        Binary(Literal("hello"), "==", Literal(None))
+    )
+)
+
+Expected output:
+
+(== (>= (- 10 3) (< 2 5)) (group (== hello nil)))
+
+Actual output:
+
+(== (>= (- 10 3) (< 2 5)) (group (== hello nil)))
+
+Result: Pass
+
+
+All three tests ran as expected and passed.
+
+
+Known Limitations
+
+Viper currently only supports creating and printing hard-coded AST expressions.
+
+It does not parse source code into an AST yet.
+
+It does not execute or evaluate expressions.
+
+The AST currently only supports expressions and does not include statements.
