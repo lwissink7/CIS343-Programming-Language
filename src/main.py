@@ -1,5 +1,9 @@
 import sys
 
+from parser import Parser
+from ast_printer import AstPrinter
+
+
 class TokenType:
     LEFT_PAREN = "LEFT_PAREN"
     RIGHT_PAREN = "RIGHT_PAREN"
@@ -45,6 +49,7 @@ class TokenType:
 
     EOF = "EOF"
 
+
 class Token:
     def __init__(self, kind, text, value, line):
         self.kind = kind
@@ -55,6 +60,7 @@ class Token:
     def __str__(self):
         return self.kind + " " + self.text + " " + str(self.value)
 
+
 class Scanner:
     def __init__(self, code):
         self.code = code
@@ -62,6 +68,7 @@ class Scanner:
         self.start = 0
         self.pos = 0
         self.line = 1
+        self.had_error = False
 
         self.words = {
             "and": TokenType.AND,
@@ -162,6 +169,7 @@ class Scanner:
 
         else:
             print("[line " + str(self.line) + "] Error: Unexpected character: " + c)
+            self.had_error = True
 
     def next_char(self):
         c = self.code[self.pos]
@@ -203,6 +211,7 @@ class Scanner:
 
         if self.pos >= len(self.code):
             print("[line " + str(self.line) + "] Error: Unterminated string.")
+            self.had_error = True
             return
 
         self.next_char()
@@ -243,18 +252,30 @@ class Scanner:
     def is_letter_or_number(self, c):
         return self.is_letter(c) or self.is_number(c)
 
-def run(src):
-    scan = Scanner(src)
-    tokens = scan.scan()
 
-    for token in tokens:
-        print(token)
+def run(src):
+    scanner = Scanner(src)
+    tokens = scanner.scan()
+
+    if scanner.had_error:
+        return
+
+    parser = Parser(tokens)
+    expression = parser.parse()
+
+    if parser.had_error:
+        return
+
+    printer = AstPrinter()
+    print(printer.print(expression))
+
 
 def open_file(name):
     file = open(name, "r")
     src = file.read()
     file.close()
     run(src)
+
 
 def run_prompt():
     while True:
@@ -268,6 +289,7 @@ def run_prompt():
             print()
             break
 
+
 def main():
     if len(sys.argv) > 2:
         print("Usage: python main.py [script]")
@@ -275,5 +297,6 @@ def main():
         open_file(sys.argv[1])
     else:
         run_prompt()
+
 
 main()
