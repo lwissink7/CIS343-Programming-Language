@@ -1,0 +1,114 @@
+Viper Lab 3 Report
+
+Expression Grammar
+
+expression -> equality ;
+equality -> comparison ( ( "!=" | "==" ) comparison )* ;
+comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term -> factor ( ( "-" | "+" ) factor )* ;
+factor -> unary ( ( "/" | "*" ) unary )* ;
+unary -> ( "!" | "-" ) unary | primary ;
+primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+
+Viper uses the same expression grammar as Lab 2. I did not change any of the grammar rules. It is still based closely on Lox and supports the same basic expression operators.
+
+From highest to lowest, the order is grouping, unary operators, multiplication and division, addition and subtraction, comparisons, and equality. Binary operators of the same precedence group from left to right. Unary operators group from right to left.
+
+
+The program uses Python 3 and does not need external libraries.
+The main files are main.py, parser.py, ast_nodes.py, and ast_printer.py.
+The test files are in test/lab3/.
+
+Run interactive mode with:
+python main.py
+
+Run the source file tests with:
+python main.py test/lab3/(test name).lox
+
+
+Test 1 - Arithmetic
+
+Purpose: Tests multiplication having higher precedence than addition.
+Input: 10 + 5 * 2
+Expected output: (+ 10.0 (* 5.0 2.0))
+Actual output: (+ 10.0 (* 5.0 2.0))
+Result: Pass 
+
+Test 2 - Grouping and Unary
+
+Purpose: Tests parentheses, !, comparison, equality, and false.
+Input: !(10 >= 5) == false
+Expected output: (== (! (group (>= 10.0 5.0))) false)
+Actual output: (== (! (group (>= 10.0 5.0))) false)
+Result: Pass 
+
+Test 3 - Literals
+
+Purpose: Tests a string, nil, and !=.
+Input: "hello" != nil
+Expected output: (!= hello nil)
+Actual output: (!= hello nil)
+Result: Pass 
+
+Test 4 - Missing Operand
+
+Purpose: Tests an expression missing the right side of an operator.
+Input: 5 +
+Expected output: [line 1] Error: Expected expression.
+Actual output: [line 1] Error: Expected expression.
+Result: Pass 
+The error happens because there is nothing after the + operator.
+
+Test 5 - Missing Parenthesis
+
+Purpose: Tests a grouped expression without a closing parenthesis.
+Input: (5 + 2
+Expected output: [line 1] Error: Expected ')' after expression.
+Actual output: [line 1] Error: Expected ')' after expression.
+Result: Pass
+The error happens because the opening parenthesis is not closed.
+
+Test 6 - Unexpected Token
+
+Purpose: Tests an operator in a position where an expression should start.
+Input: * 5
+Expected output: [line 1] Error: Unexpected token: *
+Actual output: [line 1] Error: Unexpected token: *
+Result: Pass 
+The error happens because * needs a left operand and cannot start an expression.
+
+Test 7 - Extra Tokens
+
+Purpose: Makes sure the parser reports extra tokens after an expression.
+Input: 5 + 2 10
+Expected output: [line 1] Error: Unexpected token after expression: 10
+Actual output: [line 1] Error: Unexpected token after expression: 10
+Result: Pass
+The error happens because the extra 10 does not belong to the finished expression.
+
+Test 8 - Interactive Error Recovery
+
+Purpose: Checks that the terminal still accepts expressions after an error.
+First input: 5 +
+Expected output: [line 1] Error: Expected expression.
+Second input: 10 * 2
+Expected output: (* 10.0 2.0)
+Actual output: 
+[line 1] Error: Expected expression.
+(* 10.0 2.0)
+Result: Pass
+
+Syntax Tree Example
+
+Expression: 10 + 5 * 2
+Printed AST: (+ 10.0 (* 5.0 2.0))
+
+The syntax tree is uploaded separately to Blackboard with my submission.
+
+Known Limitations
+
+Viper only parses one expression per file or interactive input.
+It does not run or evaluate the AST yet, and it does not support statements.
+Logical and and or are not included in the Lab 3 parser.
+The source file tests above do not individually cover every operator, so additional operator tests would improve coverage.
+
