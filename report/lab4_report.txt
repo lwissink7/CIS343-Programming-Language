@@ -1,0 +1,42 @@
+Lab 4 Report
+For this lab, I added print statements and expression statements to Viper. Print statements display the evaluated result, while expression statements evaluate without printing anything. I also added panic-mode error recovery to the parser so that it can continue parsing after a syntax error.
+
+The program uses Python 3 and does not require external libraries. I reused my scanner and evaluator from the earlier labs.
+Run the tests from the folder containing main.py:
+python main.py test/lab4/test1.lox
+python main.py test/lab4/test2.lox
+
+Test 1
+Input:
+"one"
+true;
+print 2 +
+Expected output:
+[line 2] Error: Expected ';' after expression.
+[line 4] Error: Expected expression.
+Actual output:
+[line 2] Error: Expected ';' after expression.
+[line 4] Error: Expected expression.
+Result: Pass
+
+Test 2
+Input:
+4 + 2;
+print "one";
+print true;
+print 1 + 2;
+print nil;
+Expected output:
+one
+true
+3.0
+nil
+Actual output:
+one
+true
+3.0
+nil
+Result: Pass
+The first expression in Test 2 does not print anything because it is not a print statement. In Test 1 the parser skips the invalid statement after reporting an error, then continues on to the remaining input.
+Known Limitations
+Viper still only supports basic expressions and the two statement types added in this lab. It does not support variable declarations, functions, or control flow statements yet.
