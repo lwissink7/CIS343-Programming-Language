@@ -1,7 +1,8 @@
 import sys
 
 from parser import Parser
-from ast_printer import AstPrinter
+from evaluator import Evaluator
+from ast_nodes import PrintStmt
 
 
 class TokenType:
@@ -16,7 +17,6 @@ class TokenType:
     SEMICOLON = "SEMICOLON"
     SLASH = "SLASH"
     STAR = "STAR"
-
     BANG = "BANG"
     BANG_EQUAL = "BANG_EQUAL"
     EQUAL = "EQUAL"
@@ -25,11 +25,9 @@ class TokenType:
     GREATER_EQUAL = "GREATER_EQUAL"
     LESS = "LESS"
     LESS_EQUAL = "LESS_EQUAL"
-
     IDENTIFIER = "IDENTIFIER"
     STRING = "STRING"
     NUMBER = "NUMBER"
-
     AND = "AND"
     CLASS = "CLASS"
     ELSE = "ELSE"
@@ -46,7 +44,6 @@ class TokenType:
     TRUE = "TRUE"
     VAR = "VAR"
     WHILE = "WHILE"
-
     EOF = "EOF"
 
 
@@ -69,7 +66,6 @@ class Scanner:
         self.pos = 0
         self.line = 1
         self.had_error = False
-
         self.words = {
             "and": TokenType.AND,
             "class": TokenType.CLASS,
@@ -120,53 +116,42 @@ class Scanner:
             self.add(TokenType.SEMICOLON)
         elif c == "*":
             self.add(TokenType.STAR)
-
         elif c == "!":
             if self.check("="):
                 self.add(TokenType.BANG_EQUAL)
             else:
                 self.add(TokenType.BANG)
-
         elif c == "=":
             if self.check("="):
                 self.add(TokenType.EQUAL_EQUAL)
             else:
                 self.add(TokenType.EQUAL)
-
         elif c == ">":
             if self.check("="):
                 self.add(TokenType.GREATER_EQUAL)
             else:
                 self.add(TokenType.GREATER)
-
         elif c == "<":
             if self.check("="):
                 self.add(TokenType.LESS_EQUAL)
             else:
                 self.add(TokenType.LESS)
-
         elif c == "/":
             if self.check("/"):
                 while self.peek() != "\n" and self.pos < len(self.code):
                     self.next_char()
             else:
                 self.add(TokenType.SLASH)
-
         elif c == " " or c == "\t" or c == "\r":
             pass
-
         elif c == "\n":
             self.line += 1
-
         elif c == '"':
             self.get_string()
-
         elif self.is_number(c):
             self.get_number()
-
         elif self.is_letter(c):
             self.get_word()
-
         else:
             print("[line " + str(self.line) + "] Error: Unexpected character: " + c)
             self.had_error = True
@@ -183,30 +168,25 @@ class Scanner:
     def check(self, char):
         if self.pos >= len(self.code):
             return False
-
         if self.code[self.pos] != char:
             return False
-
         self.pos += 1
         return True
 
     def peek(self):
         if self.pos >= len(self.code):
             return "\0"
-
         return self.code[self.pos]
 
     def peek_next(self):
         if self.pos + 1 >= len(self.code):
             return "\0"
-
         return self.code[self.pos + 1]
 
     def get_string(self):
         while self.peek() != '"' and self.pos < len(self.code):
             if self.peek() == "\n":
                 self.line += 1
-
             self.next_char()
 
         if self.pos >= len(self.code):
@@ -215,29 +195,23 @@ class Scanner:
             return
 
         self.next_char()
-
         value = self.code[self.start + 1:self.pos - 1]
         self.add(TokenType.STRING, value)
 
     def get_number(self):
         while self.is_number(self.peek()):
             self.next_char()
-
         if self.peek() == "." and self.is_number(self.peek_next()):
             self.next_char()
-
             while self.is_number(self.peek()):
                 self.next_char()
-
         text = self.code[self.start:self.pos]
         self.add(TokenType.NUMBER, float(text))
 
     def get_word(self):
         while self.is_letter_or_number(self.peek()):
             self.next_char()
-
         text = self.code[self.start:self.pos]
-
         if text in self.words:
             self.add(self.words[text])
         else:
@@ -261,13 +235,16 @@ def run(src):
         return
 
     parser = Parser(tokens)
-    expression = parser.parse()
+    statements = parser.parse()
+    evaluator = Evaluator()
 
-    if parser.had_error:
-        return
-
-    printer = AstPrinter()
-    print(printer.print(expression))
+    for statement in statements:
+        try:
+            value = evaluator.evaluate(statement.expression)
+            if isinstance(statement, PrintStmt):
+                print(evaluator.print_value(value))
+        except ValueError as error:
+            print("Runtime Error:", error)
 
 
 def open_file(name):

@@ -19,3 +19,13 @@ class Grouping:
 class Literal:
     def __init__(self, value):
         self.value = value
+
+
+class PrintStmt:
+    def __init__(self, expression):
+        self.expression = expression
+
+
+class ExprStmt:
+    def __init__(self, expression):
+        self.expression = expression

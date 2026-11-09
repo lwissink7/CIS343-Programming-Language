@@ -1,4 +1,8 @@
-from ast_nodes import Binary, Unary, Grouping, Literal
+from ast_nodes import Binary, Unary, Grouping, Literal, PrintStmt, ExprStmt
+
+
+class ParseError(Exception):
+    pass
 
 
 class Parser:
@@ -8,17 +12,25 @@ class Parser:
         self.had_error = False
 
     def parse(self):
+        statements = []
+
+        while not self.is_end():
+            try:
+                statements.append(self.statement())
+            except ParseError:
+                self.synchronize()
+
+        return statements
+
+    def statement(self):
+        if self.match(["PRINT"]):
+            expr = self.expression()
+            self.consume("SEMICOLON", "Expected ';' after print statement.")
+            return PrintStmt(expr)
+
         expr = self.expression()
-
-        if self.had_error:
-            return None
-
-        if not self.is_end():
-            token = self.peek()
-            self.error(token, "Unexpected token after expression: " + token.text)
-            return None
-
-        return expr
+        self.consume("SEMICOLON", "Expected ';' after expression.")
+        return ExprStmt(expr)
 
     def expression(self):
         return self.equality()
@@ -86,20 +98,29 @@ class Parser:
 
         if self.match(["LEFT_PAREN"]):
             expr = self.expression()
-
-            if not self.match(["RIGHT_PAREN"]):
-                self.error(self.peek(), "Expected ')' after expression.")
-
+            self.consume("RIGHT_PAREN", "Expected ')' after expression.")
             return Grouping(expr)
 
-        token = self.peek()
-
-        if token.kind == "EOF":
-            self.error(token, "Expected expression.")
+        if self.is_end():
+            self.error(self.peek(), "Expected expression.")
         else:
-            self.error(token, "Unexpected token: " + token.text)
+            self.error(self.peek(), "Unexpected token: " + self.peek().text)
 
-        return None
+    def consume(self, kind, message):
+        if self.match([kind]):
+            return self.previous()
+
+        self.error(self.peek(), message)
+
+    def synchronize(self):
+        while not self.is_end():
+            if self.current > 0 and self.previous().kind == "SEMICOLON":
+                return
+
+            if self.peek().kind == "PRINT":
+                return
+
+            self.advance()
 
     def match(self, kinds):
         for kind in kinds:
@@ -111,7 +132,7 @@ class Parser:
 
     def check(self, kind):
         if self.is_end():
-            return kind == "EOF"
+            return False
 
         return self.peek().kind == kind
 
@@ -133,3 +154,4 @@ class Parser:
     def error(self, token, message):
         print("[line " + str(token.line) + "] Error: " + message)
         self.had_error = True
+        raise ParseError()
