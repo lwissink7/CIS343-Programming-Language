@@ -1,0 +1,120 @@
+Lab 5 Report
+For this lab, I added variables, assignments, and block scope to Viper.
+
+Variables use var name = value; or var name; to declare them. Variables can be read with their name and changed using name = value;.
+Using a variable before declaring it gives a runtime error. A variable with no initializer starts as nil. Declaring the same name twice in one scope gives a runtime error, but the name can be reused inside another block.
+I used a list of dictionaries to store the variables. The program checks the current block first, then outer blocks. Variables created inside a block are removed when that block ends. Assignments change the closest existing variable with that name. This is similar to Lox.
+
+I updated main.py, parser.py, ast_nodes.py, and evaluator.py. The scanner and AST printer from the previous labs did not need changes.
+Run the tests from the folder containing main.py:
+python main.py test/lab5/variables.lox
+python main.py test/lab5/scope.lox
+python main.py test/lab5/runtime_errors.lox
+python main.py test/lab5/syntax_errors.lox
+Use python main.py for interactive mode.
+Test 1
+Input:
+var x = 2;
+print x;
+x = x + 3;
+print x;
+var y;
+print y;
+Expected output:
+2.0
+5.0
+nil
+Actual output:
+2.0
+5.0
+nil
+Result: Pass
+Test 2
+Input:
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+var a = "outer a";
+var b = "outer b";
+{
+var a = "inner a";
+print a;
+print b;
+print c;
+}
+print a;
+print b;
+print c;
+}
+print a;
+print b;
+print c;
+Expected output:
+inner a
+outer b
+global c
+outer a
+outer b
+global c
+global a
+global b
+global c
+Actual output:
+inner a
+outer b
+global c
+outer a
+outer b
+global c
+global a
+global b
+global c
+Result: Pass
+The first three lines are printed from the inner block. It finds a inside the inner block, b in the outer block, and c globally. After the inner block ends, the next three lines use the outer a and b and the global c. After the outer block ends, the last three lines use the global variables.
+Test 3
+Input:
+print missing;
+missing = 5;
+var x = 1;
+var x = 2;
+print x;
+{
+var temp = 10;
+}
+print temp;
+Expected output:
+Runtime Error: [line 1] Undefined variable: missing
+Runtime Error: [line 2] Undefined variable: missing
+Runtime Error: [line 4] Variable already declared: x
+1.0
+Runtime Error: [line 9] Undefined variable: temp
+Actual output:
+Runtime Error: [line 1] Undefined variable: missing
+Runtime Error: [line 2] Undefined variable: missing
+Runtime Error: [line 4] Variable already declared: x
+1.0
+Runtime Error: [line 9] Undefined variable: temp
+Result: Pass
+The missing variable was never declared. x was declared twice in the same scope. temp was declared in a block and is not available after the block ends. The program still runs later statements after these errors.
+Test 4 
+Input:
+5 = 3;
+}
+print "continued";
+{
+print "not run";
+Expected output:
+[line 1] Error: Invalid assignment target.
+[line 2] Error: Unexpected '}' without matching '{'.
+[line 6] Error: Expected '}' after block.
+continued
+Actual output:
+[line 1] Error: Invalid assignment target.
+[line 2] Error: Unexpected '}' without matching '{'.
+[line 6] Error: Expected '}' after block.
+continued
+Result: Pass
+The first error happens because 5 is not a variable that can be assigned to. The next error is caused by an extra closing brace. The final error is caused by a block that was never closed. The valid print statement still runs.
+Known Limitations
+Viper still does not have functions, loops, or other control flow statements. Variables only exist during the current program or interactive session.
