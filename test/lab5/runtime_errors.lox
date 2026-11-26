@@ -1,0 +1,9 @@
+print missing;
+missing = 5;
+var x = 1;
+var x = 2;
+print x;
+{
+    var temp = 10;
+}
+print temp;
