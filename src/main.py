@@ -2,7 +2,6 @@ import sys
 
 from parser import Parser
 from evaluator import Evaluator
-from ast_nodes import PrintStmt
 
 
 class TokenType:
@@ -227,7 +226,7 @@ class Scanner:
         return self.is_letter(c) or self.is_number(c)
 
 
-def run(src):
+def run(src, evaluator=None):
     scanner = Scanner(src)
     tokens = scanner.scan()
 
@@ -236,13 +235,13 @@ def run(src):
 
     parser = Parser(tokens)
     statements = parser.parse()
-    evaluator = Evaluator()
+
+    if evaluator is None:
+        evaluator = Evaluator()
 
     for statement in statements:
         try:
-            value = evaluator.evaluate(statement.expression)
-            if isinstance(statement, PrintStmt):
-                print(evaluator.print_value(value))
+            evaluator.execute(statement)
         except ValueError as error:
             print("Runtime Error:", error)
 
@@ -255,10 +254,12 @@ def open_file(name):
 
 
 def run_prompt():
+    evaluator = Evaluator()
+
     while True:
         try:
             line = input("> ")
-            run(line)
+            run(line, evaluator)
         except KeyboardInterrupt:
             print()
             break

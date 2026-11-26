@@ -1,4 +1,4 @@
-from ast_nodes import Binary, Unary, Grouping, Literal, PrintStmt, ExprStmt
+from ast_nodes import Binary, Unary, Grouping, Literal, Variable, Assign, PrintStmt, ExprStmt, VarStmt, BlockStmt
 
 
 class ParseError(Exception):
@@ -15,12 +15,30 @@ class Parser:
         statements = []
 
         while not self.is_end():
-            try:
-                statements.append(self.statement())
-            except ParseError:
-                self.synchronize()
+            item = self.declaration()
+            if item is not None:
+                statements.append(item)
 
         return statements
+
+    def declaration(self):
+        try:
+            if self.match(["VAR"]):
+                return self.var_declaration()
+            return self.statement()
+        except ParseError:
+            self.synchronize()
+            return None
+
+    def var_declaration(self):
+        name = self.consume("IDENTIFIER", "Expected variable name.")
+        value = None
+
+        if self.match(["EQUAL"]):
+            value = self.expression()
+
+        self.consume("SEMICOLON", "Expected ';' after variable declaration.")
+        return VarStmt(name, value)
 
     def statement(self):
         if self.match(["PRINT"]):
@@ -28,12 +46,43 @@ class Parser:
             self.consume("SEMICOLON", "Expected ';' after print statement.")
             return PrintStmt(expr)
 
+        if self.match(["LEFT_BRACE"]):
+            return BlockStmt(self.block())
+
+        if self.match(["RIGHT_BRACE"]):
+            self.error(self.previous(), "Unexpected '}' without matching '{'.")
+
         expr = self.expression()
         self.consume("SEMICOLON", "Expected ';' after expression.")
         return ExprStmt(expr)
 
+    def block(self):
+        statements = []
+
+        while not self.check("RIGHT_BRACE") and not self.is_end():
+            item = self.declaration()
+            if item is not None:
+                statements.append(item)
+
+        self.consume("RIGHT_BRACE", "Expected '}' after block.")
+        return statements
+
     def expression(self):
-        return self.equality()
+        return self.assignment()
+
+    def assignment(self):
+        expr = self.equality()
+
+        if self.match(["EQUAL"]):
+            equals = self.previous()
+            value = self.assignment()
+
+            if isinstance(expr, Variable):
+                return Assign(expr.name, value)
+
+            self.error(equals, "Invalid assignment target.")
+
+        return expr
 
     def equality(self):
         expr = self.comparison()
@@ -96,6 +145,9 @@ class Parser:
         if self.match(["NUMBER", "STRING"]):
             return Literal(self.previous().value)
 
+        if self.match(["IDENTIFIER"]):
+            return Variable(self.previous())
+
         if self.match(["LEFT_PAREN"]):
             expr = self.expression()
             self.consume("RIGHT_PAREN", "Expected ')' after expression.")
@@ -117,7 +169,11 @@ class Parser:
             if self.current > 0 and self.previous().kind == "SEMICOLON":
                 return
 
-            if self.peek().kind == "PRINT":
+            if self.peek().kind == "SEMICOLON":
+                self.advance()
+                return
+
+            if self.peek().kind in ["PRINT", "VAR", "LEFT_BRACE", "RIGHT_BRACE"]:
                 return
 
             self.advance()
